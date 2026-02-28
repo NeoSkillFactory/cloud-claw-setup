@@ -1,0 +1,60 @@
+# OpenClaw Configuration Template
+# Copy this file and customize for your deployment
+# Usage: ./scripts/configure.sh --config my-config.yaml
+
+openclaw:
+  version: "1.0"
+  environment: production
+
+  server:
+    host: "0.0.0.0"
+    port: 8080
+    workers: auto        # auto = 75% of available CPUs
+    max_connections: 100
+    request_timeout: 300
+    keep_alive: true
+
+  resources:
+    memory_limit: auto   # auto = 60% of available RAM
+    cpu_limit: auto      # auto = all available CPUs
+    max_concurrent_agents: 4
+    task_queue_size: 20
+
+  agent:
+    default_model: "claude-sonnet-4-6"
+    max_turns: 25
+    enable_tools: true
+    sandbox_mode: true
+
+  logging:
+    level: info          # debug, info, warn, error
+    format: json         # json, text
+    output: /var/log/openclaw/openclaw.log
+    max_size: "100m"
+    max_backups: 5
+
+  security:
+    enable_tls: true
+    api_key_required: true
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 60
+    cors:
+      enabled: true
+      allowed_origins:
+        - "https://*"
+
+  cloud:
+    provider: auto       # auto, aws, gcp, azure, generic
+    region: auto
+    storage_backend: auto # auto, s3, gcs, blob, filesystem
+
+  storage:
+    data_dir: /var/lib/openclaw/data
+    cache_dir: /var/lib/openclaw/cache
+    temp_dir: /tmp/openclaw
+
+  health:
+    enabled: true
+    endpoint: /health
+    interval: 30

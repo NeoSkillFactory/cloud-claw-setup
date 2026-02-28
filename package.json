@@ -1,0 +1,27 @@
+{
+  "name": "cloud-claw-setup",
+  "version": "1.0.0",
+  "description": "Automatically installs and configures OpenClaw on cloud VMs for AI agent deployment",
+  "main": "scripts/install.sh",
+  "scripts": {
+    "install-openclaw": "bash scripts/install.sh",
+    "configure": "bash scripts/configure.sh",
+    "validate": "bash scripts/validate.sh",
+    "setup": "bash scripts/install.sh && bash scripts/configure.sh && bash scripts/validate.sh",
+    "setup:aws": "bash scripts/install.sh --provider aws && bash scripts/configure.sh --provider aws && bash scripts/validate.sh",
+    "setup:gcp": "bash scripts/install.sh --provider gcp && bash scripts/configure.sh --provider gcp && bash scripts/validate.sh",
+    "setup:azure": "bash scripts/install.sh --provider azure && bash scripts/configure.sh --provider azure && bash scripts/validate.sh",
+    "test": "bash tests/run_tests.sh"
+  },
+  "keywords": [
+    "openclaw",
+    "cloud",
+    "deployment",
+    "automation",
+    "aws",
+    "gcp",
+    "azure",
+    "ai-agents"
+  ],
+  "license": "MIT"
+}

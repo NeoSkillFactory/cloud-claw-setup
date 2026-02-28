@@ -1,0 +1,50 @@
+{
+  "deployment": {
+    "name": "openclaw-production",
+    "version": "1.0.0",
+    "created": "2026-03-01T00:00:00Z",
+    "provider": "aws",
+    "region": "us-east-1"
+  },
+  "vm": {
+    "instance_type": "m5.xlarge",
+    "os": "ubuntu-22.04",
+    "disk_size_gb": 100,
+    "disk_type": "gp3"
+  },
+  "openclaw": {
+    "workers": 3,
+    "memory_limit": "10g",
+    "max_concurrent_agents": 6,
+    "port": 8080,
+    "tls_enabled": true,
+    "api_key_required": true
+  },
+  "networking": {
+    "vpc_cidr": "10.0.0.0/16",
+    "subnet_cidr": "10.0.1.0/24",
+    "security_group_rules": [
+      {
+        "protocol": "tcp",
+        "port": 22,
+        "source": "admin-ip/32",
+        "description": "SSH access"
+      },
+      {
+        "protocol": "tcp",
+        "port": 8080,
+        "source": "10.0.0.0/16",
+        "description": "OpenClaw API internal"
+      }
+    ]
+  },
+  "monitoring": {
+    "cloudwatch_enabled": true,
+    "log_group": "/openclaw/production",
+    "alarm_thresholds": {
+      "cpu_percent": 80,
+      "memory_percent": 85,
+      "disk_percent": 90
+    }
+  }
+}
