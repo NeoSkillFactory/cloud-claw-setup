@@ -271,6 +271,135 @@ fi
 echo ""
 
 # ----------------------------------------
+# Test Group 9: Provider-specific config generation
+# ----------------------------------------
+echo "--- Provider Config Tests ---"
+
+for test_provider in aws gcp azure generic; do
+    PROV_CONFIG="/tmp/openclaw-test-config-${test_provider}-$$.yaml"
+    TOTAL=$((TOTAL + 1))
+    set +e
+    PROV_OUTPUT=$(bash "$SKILL_DIR/scripts/configure.sh" --provider "$test_provider" --output "$PROV_CONFIG" 2>&1)
+    prov_rc=$?
+    set -e
+    if [[ $prov_rc -eq 0 ]] && [[ -f "$PROV_CONFIG" ]]; then
+        PROV_CONTENT=$(cat "$PROV_CONFIG")
+        if echo "$PROV_CONTENT" | grep -q "provider: $test_provider"; then
+            echo -e "${GREEN}PASS${NC} configure.sh generates $test_provider config with correct provider"
+            PASS=$((PASS + 1))
+        else
+            echo -e "${RED}FAIL${NC} configure.sh $test_provider config missing provider field"
+            FAIL=$((FAIL + 1))
+        fi
+    else
+        echo -e "${RED}FAIL${NC} configure.sh failed for provider $test_provider (exit $prov_rc)"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "$PROV_CONFIG"
+done
+
+echo ""
+
+# ----------------------------------------
+# Test Group 10: Script shebang and error handling
+# ----------------------------------------
+echo "--- Script Quality Tests ---"
+
+for script in "$SKILL_DIR"/scripts/*.sh; do
+    sname=$(basename "$script")
+    TOTAL=$((TOTAL + 1))
+    first_line=$(head -1 "$script")
+    if [[ "$first_line" == "#!/usr/bin/env bash" ]]; then
+        echo -e "${GREEN}PASS${NC} $sname has correct shebang"
+        PASS=$((PASS + 1))
+    else
+        echo -e "${RED}FAIL${NC} $sname missing shebang (got: $first_line)"
+        FAIL=$((FAIL + 1))
+    fi
+
+    TOTAL=$((TOTAL + 1))
+    if grep -q "set -euo pipefail" "$script"; then
+        echo -e "${GREEN}PASS${NC} $sname has strict error handling"
+        PASS=$((PASS + 1))
+    else
+        echo -e "${RED}FAIL${NC} $sname missing 'set -euo pipefail'"
+        FAIL=$((FAIL + 1))
+    fi
+done
+
+echo ""
+
+# ----------------------------------------
+# Test Group 11: SKILL.md triggers
+# ----------------------------------------
+echo "--- SKILL.md Trigger Tests ---"
+
+TRIGGER_COUNT=$(grep -c "^  - " "$SKILL_DIR/SKILL.md" || echo 0)
+TOTAL=$((TOTAL + 1))
+if [[ $TRIGGER_COUNT -ge 5 ]]; then
+    echo -e "${GREEN}PASS${NC} SKILL.md has $TRIGGER_COUNT triggers (>= 5 required)"
+    PASS=$((PASS + 1))
+else
+    echo -e "${RED}FAIL${NC} SKILL.md has $TRIGGER_COUNT triggers (>= 5 required)"
+    FAIL=$((FAIL + 1))
+fi
+
+echo ""
+
+# ----------------------------------------
+# Test Group 12: Invalid argument handling
+# ----------------------------------------
+echo "--- Error Handling Tests ---"
+
+TOTAL=$((TOTAL + 1))
+set +e
+bash "$SKILL_DIR/scripts/install.sh" --invalid-flag >/dev/null 2>&1
+invalid_rc=$?
+set -e
+if [[ $invalid_rc -ne 0 ]]; then
+    echo -e "${GREEN}PASS${NC} install.sh rejects invalid flags"
+    PASS=$((PASS + 1))
+else
+    echo -e "${RED}FAIL${NC} install.sh should reject invalid flags"
+    FAIL=$((FAIL + 1))
+fi
+
+TOTAL=$((TOTAL + 1))
+set +e
+bash "$SKILL_DIR/scripts/configure.sh" --invalid-flag >/dev/null 2>&1
+invalid_rc=$?
+set -e
+if [[ $invalid_rc -ne 0 ]]; then
+    echo -e "${GREEN}PASS${NC} configure.sh rejects invalid flags"
+    PASS=$((PASS + 1))
+else
+    echo -e "${RED}FAIL${NC} configure.sh should reject invalid flags"
+    FAIL=$((FAIL + 1))
+fi
+
+echo ""
+
+# ----------------------------------------
+# Test Group 13: Config content validation
+# ----------------------------------------
+echo "--- Config Content Validation Tests ---"
+
+VALIDATE_CONFIG="/tmp/openclaw-test-validate-$$.yaml"
+bash "$SKILL_DIR/scripts/configure.sh" --provider generic --output "$VALIDATE_CONFIG" >/dev/null 2>&1
+
+if [[ -f "$VALIDATE_CONFIG" ]]; then
+    VC=$(cat "$VALIDATE_CONFIG")
+    assert_contains "Config has workers field" "workers:" "$VC"
+    assert_contains "Config has memory_limit field" "memory_limit:" "$VC"
+    assert_contains "Config has health endpoint" "endpoint: /health" "$VC"
+    assert_contains "Config has TLS enabled" "enable_tls: true" "$VC"
+    assert_contains "Config has rate limiting" "rate_limiting:" "$VC"
+    rm -f "$VALIDATE_CONFIG"
+fi
+
+echo ""
+
+# ----------------------------------------
 # Summary
 # ----------------------------------------
 echo "======================================"

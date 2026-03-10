@@ -38,7 +38,6 @@ for AWS, GCP, and Azure environments.
 | `--vm-type` | No | auto-detect | VM instance type for resource optimization |
 | `--config` | No | `assets/config-template.yaml` | Path to custom config template |
 | `--dry-run` | No | false | Show what would be done without making changes |
-| `--skip-validation` | No | false | Skip post-install validation checks |
 
 ## Output Types
 

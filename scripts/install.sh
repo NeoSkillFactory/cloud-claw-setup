@@ -62,7 +62,7 @@ parse_args() {
                 ;;
             *)
                 log_error "Unknown option: $1"
-                usage
+                exit 1
                 ;;
         esac
     done
@@ -217,14 +217,26 @@ install_nodejs() {
 
     log_info "Installing Node.js LTS..."
     if command -v curl &>/dev/null; then
-        curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - 2>>"$LOG_FILE"
+        if command -v sudo &>/dev/null; then
+            curl -fsSL https://deb.nodesource.com/setup_lts.x 2>>"$LOG_FILE" | sudo bash - 2>>"$LOG_FILE"
+        else
+            curl -fsSL https://deb.nodesource.com/setup_lts.x 2>>"$LOG_FILE" | bash - 2>>"$LOG_FILE"
+        fi
         local pkg_mgr
         pkg_mgr=$(detect_package_manager)
-        case "$pkg_mgr" in
-            apt) apt-get install -y -qq nodejs 2>>"$LOG_FILE" ;;
-            dnf) dnf install -y -q nodejs 2>>"$LOG_FILE" ;;
-            yum) yum install -y -q nodejs 2>>"$LOG_FILE" ;;
-        esac
+        if command -v sudo &>/dev/null; then
+            case "$pkg_mgr" in
+                apt) sudo apt-get install -y -qq nodejs 2>>"$LOG_FILE" ;;
+                dnf) sudo dnf install -y -q nodejs 2>>"$LOG_FILE" ;;
+                yum) sudo yum install -y -q nodejs 2>>"$LOG_FILE" ;;
+            esac
+        else
+            case "$pkg_mgr" in
+                apt) apt-get install -y -qq nodejs 2>>"$LOG_FILE" ;;
+                dnf) dnf install -y -q nodejs 2>>"$LOG_FILE" ;;
+                yum) yum install -y -q nodejs 2>>"$LOG_FILE" ;;
+            esac
+        fi
     fi
     log_info "Node.js installed: $(node --version 2>/dev/null || echo 'installation pending')"
 }
@@ -343,25 +355,29 @@ generate_deployment_script() {
         return
     fi
 
-    cat > "$deploy_script" <<DEPLOY_EOF
+    cat > "$deploy_script" <<'DEPLOY_HEADER'
 #!/usr/bin/env bash
+DEPLOY_HEADER
+    cat >> "$deploy_script" <<DEPLOY_EOF
 # OpenClaw Deployment Script
 # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 # Provider: $provider
 # VM Type: $vm_type
+# Original script directory: $SCRIPT_DIR
 set -euo pipefail
 
+SKILL_SCRIPTS="$SCRIPT_DIR"
+
 echo "Replaying OpenClaw installation..."
-SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 
 # Step 1: Install dependencies
-bash "$SCRIPT_DIR/install.sh" --provider "$provider"
+bash "\$SKILL_SCRIPTS/install.sh" --provider "$provider"
 
 # Step 2: Configure
-bash "$SCRIPT_DIR/configure.sh" --provider "$provider"
+bash "\$SKILL_SCRIPTS/configure.sh" --provider "$provider"
 
 # Step 3: Validate
-bash "$SCRIPT_DIR/validate.sh"
+bash "\$SKILL_SCRIPTS/validate.sh"
 
 echo "OpenClaw deployment complete."
 DEPLOY_EOF

@@ -37,7 +37,7 @@ install_azure_cli() {
     log_info "Installing Azure CLI..."
 
     if command -v curl &>/dev/null; then
-        curl -fsSL https://aka.ms/InstallAzureCLIDeb 2>>"$LOG_FILE" | bash 2>>"$LOG_FILE" || {
+        curl -fsSL https://aka.ms/InstallAzureCLIDeb 2>>"$LOG_FILE" | sudo bash 2>>"$LOG_FILE" || {
             # Fallback: try pip install
             if command -v pip3 &>/dev/null; then
                 pip3 install --quiet azure-cli 2>>"$LOG_FILE" || log_warn "Could not install Azure CLI. Install manually: https://learn.microsoft.com/cli/azure/install-azure-cli"

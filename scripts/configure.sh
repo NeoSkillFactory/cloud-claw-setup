@@ -50,7 +50,7 @@ parse_args() {
             --vm-type)   VM_TYPE="$2"; shift 2 ;;
             --dry-run)   DRY_RUN=true; shift ;;
             -h|--help)   usage ;;
-            *)           log_error "Unknown option: $1"; usage ;;
+            *)           log_error "Unknown option: $1"; exit 1 ;;
         esac
     done
 }
