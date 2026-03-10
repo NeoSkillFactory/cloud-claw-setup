@@ -31,8 +31,6 @@
 
 Source code: [github.com/NeoSkillFactory/cloud-claw-setup](https://github.com/NeoSkillFactory/cloud-claw-setup)
 
-**Price suggestion:** $29.99 USD
-
 ## License
 
 MIT © NeoSkillFactory
